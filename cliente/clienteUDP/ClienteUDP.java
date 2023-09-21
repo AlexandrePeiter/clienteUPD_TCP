@@ -1,9 +1,8 @@
-package clienteUDP;
+package cliente.clienteUDP;
 
 import java.net.*;
 
-import clienteTCP.Recebedor;
-import view.ViewClienteUDP;
+import cliente.view.ViewClienteUDP;
 
 import java.io.*;
 

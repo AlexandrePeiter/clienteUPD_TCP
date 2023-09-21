@@ -1,14 +1,13 @@
-package clienteTCP;
+package cliente.clienteTCP;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import view.ViewClienteTCP;
+import cliente.view.ViewClienteTCP;
 
 public class Cliente	{
 	

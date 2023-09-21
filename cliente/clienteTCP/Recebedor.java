@@ -1,4 +1,4 @@
-package clienteTCP;
+package cliente.clienteTCP;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 
-import view.ViewClienteTCP;
+import cliente.view.ViewClienteTCP;
 
 public class Recebedor implements Runnable	{
 	private	InputStream	servidor;
@@ -51,6 +51,7 @@ public class Recebedor implements Runnable	{
 				view.receberMensagem(dados[0] + "Enviou o arquivo " +arquivoNome);
 				System.out.println("Arquivo recebido com sucesso!");
 			}
+			s.close();
 		}
 	}
 

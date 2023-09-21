@@ -1,12 +1,10 @@
-package clienteUDP;
+package cliente.clienteUDP;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
-import view.ViewClienteUDP;
+import cliente.view.ViewClienteUDP;
 
 public class RecebedorUDP implements Runnable {
 	

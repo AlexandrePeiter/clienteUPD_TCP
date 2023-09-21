@@ -1,4 +1,4 @@
-package view;
+package cliente.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,7 +32,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import clienteTCP.Cliente;
+import cliente.clienteTCP.Cliente;
 
 public class ViewClienteTCP extends JFrame {
 
@@ -149,7 +149,7 @@ public class ViewClienteTCP extends JFrame {
 		textField_1 = new JTextField();
 		textPane = new JTextPane();
 		textPane.setAutoscrolls(true);
-		 SimpleAttributeSet paraStyle = new SimpleAttributeSet();
+		
 
 		styledDoc = textPane.getStyledDocument();
 		textField_1.addKeyListener(new KeyAdapter() {
@@ -159,7 +159,7 @@ public class ViewClienteTCP extends JFrame {
 					String mensagem = textField_1.getText();
 					String destino = list.getSelectedItem();
 					System.out.println(destino + ";" + nome + ": " +mensagem);
-					String texto = textPane.getText() ;
+		
 					textField_1.setText("");
 					
 					//System.out.println("tentando alinhar : " + mensagem);
