@@ -26,30 +26,16 @@ public class TrataCliente implements Runnable	{
 				tratarArquivo(dados);			
 		}
 		s.close();
+		
 	}
 	private void tratarArquivo(String[] dados) {
 		
-		
-		servidor.enviarArquivo(nomeSender, dados[1], dados[2], cliente);
-		/*String arquivoNome = dados[2];
-		File arquivoRecebido = new File(arquivoNome);
-		FileOutputStream fileOutputStream = null;
-		try {
-			fileOutputStream = new FileOutputStream(arquivoRecebido);
-			byte[] buffer = new byte[1024];
-			int bytesRead;
-			System.out.println("Entrando no While");
-			while ((bytesRead = cliente.read(buffer)) != -1) {
-				fileOutputStream.write(buffer, 0, bytesRead);	
-				if(bytesRead  !=  1024)
-	            	break;
-			}
-			fileOutputStream.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+		if(dados[1].equals("broadcast")) {
+			servidor.destribuirArquivo(nomeSender, dados[2], cliente);
+		} else {
+			servidor.enviarArquivo(nomeSender, dados[1], dados[2], cliente);
 		}
-		servidor.enviarArquivo(nomeSender, dados[1], nomeSender + ";" + dados[2], arquivoRecebido);*/
-		
+	
 	}
 	private void tratarMensagens(String[] dados) {
 		if(dados[1].equals("broadcast")) {

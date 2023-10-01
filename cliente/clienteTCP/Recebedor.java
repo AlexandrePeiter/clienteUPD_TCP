@@ -11,9 +11,12 @@ import cliente.view.ViewClienteTCP;
 public class Recebedor implements Runnable	{
 	private	InputStream	servidor;
 	private ViewClienteTCP view;
-	public	Recebedor(InputStream	servidor, ViewClienteTCP view) {
+	private String nome;
+	
+	public	Recebedor(InputStream	servidor, ViewClienteTCP view, String nome) {
 		this.servidor	=	servidor;
 		this.view = view;
+		this.nome = nome;
 	}
 	public	void	run() {
 		Scanner s = new Scanner(this.servidor);
@@ -29,7 +32,7 @@ public class Recebedor implements Runnable	{
 				//str = str.substring(4);
 				String dados[] = str.split(";", 2);
 				String arquivoNome = dados[1];
-				File arquivoRecebido = new File(arquivoNome);
+				File arquivoRecebido = new File(nome+"_"+arquivoNome);
 				FileOutputStream fileOutputStream = null;
 				try {
 					fileOutputStream = new FileOutputStream(arquivoRecebido);
@@ -51,8 +54,9 @@ public class Recebedor implements Runnable	{
 				view.receberMensagem(dados[0] + "Enviou o arquivo " +arquivoNome);
 				System.out.println("Arquivo recebido com sucesso!");
 			}
-			s.close();
+			
 		}
+		s.close();
 	}
 
 }

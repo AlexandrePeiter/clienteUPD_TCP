@@ -27,7 +27,7 @@ public class Cliente	{
 		cliente	=	new	Socket(this.host,	this.porta);
 		System.out.println("O cliente se conectou ao servidor!");
 		this.nome = nome;
-		r = new Recebedor(cliente.getInputStream(), view);
+		r = new Recebedor(cliente.getInputStream(), view, nome);
 		new Thread(r).start();
 		saida = new	PrintStream(cliente.getOutputStream());	
 		saida.println(nome);

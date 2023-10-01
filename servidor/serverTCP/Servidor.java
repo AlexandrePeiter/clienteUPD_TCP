@@ -27,6 +27,7 @@ public class Servidor	{
 		this.clientes = new	HashMap<>();
 		this.nomeCliente = new ArrayList<>();
 	}
+	@SuppressWarnings("resource")
 	public void executa () throws IOException {
 		ServerSocket servidor = new ServerSocket(this.porta);
 		System.out.println("Porta 12345 aberta!");
@@ -67,8 +68,6 @@ public class Servidor	{
 						cliente.println("NC: " + string);
 				}
 			}
-			
-			
 		}
 	}
 	public void brodcastMessage(String sender, String message) {
@@ -123,23 +122,32 @@ public class Servidor	{
 		}
 		
 	}
-	/*public void destribuirArquivo(String sender, String message, InputStream dadosArquivo) {
-		
+	public void destribuirArquivo(String sender, String message, InputStream dadosArquivo) {
 		byte[] buffer = new byte[1024];
+		int bytesRead;
+		for(Entry<String, PrintStream> entrada : clientes.entrySet()) {
+			PrintStream cliente = entrada.getValue();
+			if(!entrada.getKey().equals(sender)) {
+				cliente = entrada.getValue();
+				cliente.println("FL: " + message);
+			}
+		}
+		
 		try {
-			while ((dadosArquivo.read()) != -1) {
+			while ((bytesRead = dadosArquivo.read(buffer)) != -1) {
 				for(Entry<String, PrintStream> entrada : clientes.entrySet())	{
 					PrintStream cliente = entrada.getValue();
 					if(!entrada.getKey().equals(sender)) {
 						cliente = entrada.getValue();
-						cliente.println("FL: " + message);
-						cliente.write(buffer);
+						cliente.write(buffer, 0, bytesRead);
 					} 					
 				}	
+				if(bytesRead  !=  1024)
+	            	break;
 			}
 		} catch (IOException e) { 
 			e.printStackTrace();
 		}
-	}*/
+	}
 	
 }

@@ -1,6 +1,7 @@
 package cliente.view;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -9,6 +10,8 @@ import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -19,8 +22,18 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import cliente.clienteUDP.ClienteUDP;
+
+
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class ViewClienteUDP extends JFrame {
 
@@ -35,6 +48,8 @@ public class ViewClienteUDP extends JFrame {
 	private String nome;
 	private String nomeArquivo;
 	private File arquivo;
+	private final JScrollPane scrollPane = new JScrollPane();
+	private StyledDocument styledDoc;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -53,6 +68,7 @@ public class ViewClienteUDP extends JFrame {
 	 * Create the frame.
 	 */
 	public ViewClienteUDP() {
+		setTitle("UDP Cliente");
 		this_viewClienteUDP = this;
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 556, 424);
@@ -82,7 +98,7 @@ public class ViewClienteUDP extends JFrame {
 				try {
 					clienteUDP.executa(nomeCliente);
 				} catch (Exception e1) {
-					
+
 					e1.printStackTrace();
 				}
 				nome = nomeCliente;
@@ -94,12 +110,6 @@ public class ViewClienteUDP extends JFrame {
 
 		JLabel lblNewLabel = new JLabel("Nome:");
 		panel.add(lblNewLabel, BorderLayout.WEST);
-
-		textPane = new JTextPane();
-		contentPane.add(textPane, BorderLayout.CENTER);
-
-		this.list = new List();
-		contentPane.add(list, BorderLayout.WEST);
 
 		JPanel panel_1 = new JPanel();
 		contentPane.add(panel_1, BorderLayout.SOUTH);
@@ -117,12 +127,20 @@ public class ViewClienteUDP extends JFrame {
 				String destino = list.getSelectedItem();
 				System.out.println(destino + ";" + nome + ": " + mensagem);
 				textField_1.setText("");
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-				if (arquivo == null)
-					clienteUDP.send("MG: " + destino + ";" + nome + ": " + mensagem);
+				String horaSistema = LocalDateTime.now().format(formatter);
+				if (arquivo == null) {
+					clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + mensagem);
+					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
+							Alignment.RIGHT, Color.BLUE);
+				}
 				else {
 					try {
-						clienteUDP.sendArquivo("FL: " + destino + ";"+ nome + ";" + "UDP"+arquivo.getName(), arquivo);
+						clienteUDP.sendArquivo("FL: " + destino + ";" + "(" + horaSistema + ") " + nome + ";" + "UDP" + arquivo.getName(),
+								arquivo);
+						addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
+								Alignment.RIGHT, Color.BLUE);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -133,6 +151,30 @@ public class ViewClienteUDP extends JFrame {
 		});
 
 		textField_1 = new JTextField();
+		textPane = new JTextPane();
+		styledDoc = textPane.getStyledDocument();
+		textField_1.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					String mensagem = textField_1.getText();
+					String destino = list.getSelectedItem();
+					System.out.println(destino + ";" + nome + ": " + mensagem);
+
+					textField_1.setText("");
+
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+					String horaSistema = LocalDateTime.now().format(formatter);
+
+					if (arquivo == null)
+						clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + mensagem);
+					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
+							Alignment.RIGHT, Color.BLUE);
+					textField_1.setEditable(true);
+				}
+			}
+		});
 		GridBagConstraints gbc_textField_1 = new GridBagConstraints();
 		gbc_textField_1.fill = GridBagConstraints.BOTH;
 		gbc_textField_1.insets = new Insets(0, 0, 0, 5);
@@ -158,7 +200,8 @@ public class ViewClienteUDP extends JFrame {
 				}
 			}
 		});
-		btnNewButton_2.setIcon(new ImageIcon(ViewClienteUDP.class.getResource("/resources/anexar-arquivo.png")));
+		btnNewButton_2
+				.setIcon(new ImageIcon(ViewClienteUDP.class.getResource("/cliente/resources/anexar-arquivo.png")));
 		GridBagConstraints gbc_btnNewButton_2 = new GridBagConstraints();
 		gbc_btnNewButton_2.insets = new Insets(0, 0, 0, 5);
 		gbc_btnNewButton_2.gridx = 1;
@@ -169,6 +212,26 @@ public class ViewClienteUDP extends JFrame {
 		gbc_btnNewButton_1.gridx = 2;
 		gbc_btnNewButton_1.gridy = 0;
 		panel_1.add(btnNewButton_1, gbc_btnNewButton_1);
+
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		scrollPane.setViewportView(textPane);
+
+		JLabel lblNewLabel_1 = new JLabel("Mensagens");
+		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
+		scrollPane.setColumnHeaderView(lblNewLabel_1);
+
+		JPanel panel_2 = new JPanel();
+		contentPane.add(panel_2, BorderLayout.WEST);
+		panel_2.setLayout(new BorderLayout(0, 0));
+
+		this.list = new List();
+		list.add("broadcast");
+		list.select(0);
+		panel_2.add(list);
+
+		JLabel lblNewLabel_2 = new JLabel("Clientes");
+		lblNewLabel_2.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_2.add(lblNewLabel_2, BorderLayout.NORTH);
 	}
 
 	public void receberMensagem(String mensagem) {
@@ -176,10 +239,39 @@ public class ViewClienteUDP extends JFrame {
 			list.add(mensagem.substring(4));
 		} else {
 			// System.out.println("Escrevendo mensagem" + mensagem);
-			String texto = textPane.getText();
-			textPane.setText(texto + mensagem + "\n");
+			addTextWithAlignment(styledDoc, mensagem + "\n", Alignment.LEFT, Color.BLACK);
 			// textField.set
 		}
 		// System.out.println("mensagem: " + mensagem);
+	}
+
+	enum Alignment {
+		LEFT, CENTER, RIGHT
+	}
+
+	private static void addTextWithAlignment(StyledDocument doc, String text, Alignment alignment, Color cor) {
+		SimpleAttributeSet set = new SimpleAttributeSet();
+
+		switch (alignment) {
+		case LEFT:
+			StyleConstants.setAlignment(set, StyleConstants.ALIGN_LEFT);
+			break;
+		case CENTER:
+			StyleConstants.setAlignment(set, StyleConstants.ALIGN_CENTER);
+			break;
+		case RIGHT:
+			StyleConstants.setAlignment(set, StyleConstants.ALIGN_RIGHT);
+			break;
+		}
+
+		// Define a cor do texto (aqui, usamos preto)
+		StyleConstants.setForeground(set, cor);
+		try {
+			// Cria um parágrafo com o estilo de alinhamento
+			doc.insertString(doc.getLength(), text, set);
+			doc.setParagraphAttributes(doc.getLength() - text.length(), text.length(), set, false);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
 	}
 }
