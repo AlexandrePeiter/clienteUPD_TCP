@@ -5,11 +5,13 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -18,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -27,6 +30,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import cliente.clienteTCP.Cliente;
 import cliente.clienteUDP.ClienteUDP;
 
 
@@ -50,7 +54,7 @@ public class ViewClienteUDP extends JFrame {
 	private File arquivo;
 	private final JScrollPane scrollPane = new JScrollPane();
 	private StyledDocument styledDoc;
-
+	private JButton btnNewButton;
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -88,22 +92,19 @@ public class ViewClienteUDP extends JFrame {
 		panel.add(txtNomeDoCliente);
 		txtNomeDoCliente.setColumns(10);
 
-		JButton btnNewButton = new JButton("Conectar");
+		btnNewButton = new JButton("Conectar");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String nomeCliente = txtNomeDoCliente.getText();
-
-				clienteUDP = new ClienteUDP("localhost", 6789, this_viewClienteUDP);
-
-				try {
-					clienteUDP.executa(nomeCliente);
-				} catch (Exception e1) {
-
-					e1.printStackTrace();
-				}
-				nome = nomeCliente;
-
-				btnNewButton.setEnabled(false);
+				nome = txtNomeDoCliente.getText();
+				
+				boolean valido = nome.matches("^[a-zA-Z0-9\\s]+$");
+		        if(!valido) {
+		        	JOptionPane.showMessageDialog(contentPane, "Erro: Insira apenas alfanuméricos.", "Erro", JOptionPane.ERROR_MESSAGE);
+		        } if(nome.equals("broadcast")) {
+		        	JOptionPane.showMessageDialog(contentPane, "Erro: Nome Inválido.", "Erro", JOptionPane.ERROR_MESSAGE);
+		        } else {
+		        	exibirCampos();
+		        }
 			}
 		});
 		panel.add(btnNewButton, BorderLayout.EAST);
@@ -273,5 +274,71 @@ public class ViewClienteUDP extends JFrame {
 		} catch (BadLocationException e) {
 			e.printStackTrace();
 		}
+		
+		
+	}
+	
+	public void exibirCampos() {
+		JFrame frame = new JFrame("Servidor UPD");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Painel para conter os componentes
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        frame.setBounds(165, 250, 100, 100);
+        // Rótulos e campos de entrada
+        JLabel nameLabel = new JLabel("Endereço IP:");
+        JTextField nameField = new JTextField(20);
+        nameField.setText("localhost");
+        JLabel numberLabel = new JLabel("Porta :");
+        JTextField numberField = new JTextField(20);
+        numberField.setText("6789");
+        panel.add(nameLabel);
+        panel.add(nameField);
+        panel.add(numberLabel);
+        panel.add(numberField);
+
+        // Botão "OK" e "Cancelar"
+        JButton okButton = new JButton("OK");
+        JButton cancelButton = new JButton("Cancelar");
+
+        okButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	String host = nameField.getText();
+                String numero = numberField.getText();
+                // Verificar se os campos estão vazios
+                if (host.isEmpty() || numero.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Por favor, preencha todos os campos.", "Erro", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    try {
+                        int porta = Integer.parseInt(numero);
+                        System.out.println(host + porta);
+                        
+                        clienteUDP = new ClienteUDP(host, porta, this_viewClienteUDP);
+
+        				try {
+        					clienteUDP.executa(nome);
+         					btnNewButton.setEnabled(false);
+        				} catch (Exception e1) {
+        					JOptionPane.showMessageDialog(frame, "Erro: Servidor não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        				}
+         				
+                        frame.dispose(); // Fechar a janela após a confirmação
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(frame, "Erro: O valor inserido não é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Fechar a janela ao clicar em Cancelar
+            }
+        });
+        panel.add(okButton);
+        panel.add(cancelButton);
+        // Adicionar o painel à janela de diálogo
+        frame.add(panel, BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
 	}
 }

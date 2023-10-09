@@ -60,7 +60,7 @@ public class RecebedorUDP implements Runnable {
 	private void trataArquivo(String mensagem) throws Exception {
 		mensagem = mensagem.substring(4);
 		String dados[] = mensagem.split(";", 2);
-		FileOutputStream fileOutputStream = new FileOutputStream(nome+"_"+dados[1]);
+		FileOutputStream fileOutputStream = new FileOutputStream("UDP//"+nome+"_"+dados[1]);
 		
 		byte[] buffer = new byte[1024];
 		while (true) {

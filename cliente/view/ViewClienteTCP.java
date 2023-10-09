@@ -97,18 +97,15 @@ public class ViewClienteTCP extends JFrame {
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				nome = txtNomeDoCliente.getText();
-				//exibirCampos();
 				
-				 cliente = new Cliente("localhost", 12345, this_viewClienteTCP);
- 				try {
- 					cliente.executa(nome);
- 					
- 				} catch (IOException e1) {
- 					e1.printStackTrace();
- 				}
-
- 				btnNewButton.setEnabled(false);
-				
+		        boolean valido = nome.matches("^[a-zA-Z0-9\\s]+$");
+		        if(!valido) {
+		        	JOptionPane.showMessageDialog(contentPane, "Erro: Insira apenas alfanuméricos.", "Erro", JOptionPane.ERROR_MESSAGE);
+		        } if(nome.equals("broadcast")) {
+		        	JOptionPane.showMessageDialog(contentPane, "Erro: Nome Inválido.", "Erro", JOptionPane.ERROR_MESSAGE);
+		        } else {
+		        	exibirCampos();
+		        }	
 			}
 		});
 		panel.add(btnNewButton, BorderLayout.EAST);
@@ -289,19 +286,19 @@ public class ViewClienteTCP extends JFrame {
 		}
 	}
 	public void exibirCampos() {
-		JFrame frame = new JFrame("Entrada de Dados");
+		JFrame frame = new JFrame("Servidor TCP");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        
         // Painel para conter os componentes
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
-
+        frame.setBounds(165, 250, 100, 100);
         // Rótulos e campos de entrada
-        JLabel nameLabel = new JLabel("Nome:");
+        JLabel nameLabel = new JLabel("Endereço IP:");
         JTextField nameField = new JTextField(20);
-
-        JLabel numberLabel = new JLabel("Número:");
+        nameField.setText("localhost");
+        JLabel numberLabel = new JLabel("Porta :");
         JTextField numberField = new JTextField(20);
-
+        numberField.setText("12345");
         panel.add(nameLabel);
         panel.add(nameField);
         panel.add(numberLabel);
@@ -316,14 +313,21 @@ public class ViewClienteTCP extends JFrame {
             	host = nameField.getText();
                 String numero = numberField.getText();
                 // Verificar se os campos estão vazios
-                if (nome.isEmpty() || numero.isEmpty()) {
+                if (host.isEmpty() || numero.isEmpty()) {
                     JOptionPane.showMessageDialog(frame, "Por favor, preencha todos os campos.", "Erro", JOptionPane.ERROR_MESSAGE);
                 } else {
                     try {
                         porta = Integer.parseInt(numero);
                         System.out.println(host + porta);
-                        // Exibir os valores coletados
-                        //JOptionPane.showMessageDialog(frame, "Nome: " + nome + "\nNúmero: " + porta);
+                        cliente = new Cliente(host, porta, this_viewClienteTCP);
+         				try {
+         					cliente.executa(nome);
+         					btnNewButton.setEnabled(false);
+         				} catch (IOException e1) {
+         					JOptionPane.showMessageDialog(frame, "Erro: Servidor não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+         				}
+
+         				
                         frame.dispose(); // Fechar a janela após a confirmação
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(frame, "Erro: O valor inserido não é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);

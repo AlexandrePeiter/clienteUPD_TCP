@@ -76,7 +76,7 @@ public class Servidor	{
 			PrintStream cliente = entrada.getValue();
 			if(!entrada.getKey().equals(sender)) {
 				cliente = entrada.getValue();
-				cliente.println(message);
+				cliente.println("MS: " +message);
 			}
 		}
 	}
