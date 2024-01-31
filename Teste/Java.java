@@ -1,1 +1,1 @@
-Class
+Class teste
