@@ -346,9 +346,11 @@ public class ViewClienteTCP extends JFrame {
          					txtNomeDoCliente.setEnabled(false);
          				} catch (IOException e1) {
          					JOptionPane.showMessageDialog(frame, "Erro: Servidor não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
-         				}
+         				} catch (ClassNotFoundException ex) {
+                            throw new RuntimeException(ex);
+                        }
 
-         				
+
                         frame.dispose(); // Fechar a janela após a confirmação
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(frame, "Erro: O valor inserido não é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);

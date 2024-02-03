@@ -1,11 +1,9 @@
 package cliente.clienteTCP;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.PublicKey;
 
 import cliente.view.ViewClienteTCP;
 
@@ -19,19 +17,23 @@ public class Cliente	{
 	Socket	cliente;
 	String nome;
 	ViewClienteTCP view;
+
+	PublicKey chavePublicaServidor;
+
 	public	Cliente	(String	host,	int	porta, ViewClienteTCP view) {
 		this.host	=	host;
 		this.porta	=	porta;
 		this.view = view;
 	}
-	public void executa(String nome) throws	UnknownHostException,	IOException	{
+	public void executa(String nome) throws UnknownHostException, IOException, ClassNotFoundException {
 		//Cria uma conex�o com o servidor
 		cliente	=	new	Socket(this.host,	this.porta);
 		System.out.println("O cliente se conectou ao servidor!");
 		this.nome = nome;
+
 		r = new Recebedor(cliente.getInputStream(), view, nome);
 		new Thread(r).start();
-		saida = new	PrintStream(cliente.getOutputStream());	
+		saida = new	PrintStream(cliente.getOutputStream());
 		saida.println(nome);
 		
 	}
@@ -52,7 +54,7 @@ public class Cliente	{
 			// Envie o arquivo byte a byte
 			byte[] buffer = new byte[1024];
 			int bytesRead;
-			System.out.println("Come�ando a enviar");
+			System.out.println("Começando a enviar");
 			while ((bytesRead = fileInputStream.read(buffer)) != -1) {
 				saida.write(buffer, 0, bytesRead);
 			}

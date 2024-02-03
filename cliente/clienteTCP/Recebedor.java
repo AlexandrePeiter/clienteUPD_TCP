@@ -24,6 +24,7 @@ public class Recebedor implements Runnable	{
 			//Dependendo do prefixo da mensagem realiza uma ação diferente
 			String str = s.nextLine();
 			//Retira um contato da lista
+			System.out.println("str: " + str);
 			if (str.startsWith("OUT")) {
 				view.removerCliente(str);
 			} else	if(!str.startsWith("FL: ")) {//Mensagem comum
@@ -41,7 +42,7 @@ public class Recebedor implements Runnable	{
 					fileOutputStream = new FileOutputStream(arquivoRecebido);
 					byte[] buffer = new byte[1024];
 					int bytesRead;
-					System.out.println("Entrando dno while recebedor");
+					System.out.println("Entrando no while recebedor");
 					 while ((bytesRead = servidor.read(buffer)) != -1) {
 				            fileOutputStream.write(buffer, 0, bytesRead);
 				            //System.out.println(bytesRead);

@@ -1,17 +1,17 @@
 package servidor.serverTCP;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import rsa.GeradorRSA;
+
+import javax.crypto.Cipher;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Scanner;
 
 public class Servidor	{
 	public	static	void	main(String[]	args)	throws	IOException	{
@@ -21,12 +21,34 @@ public class Servidor	{
 	private int	porta;
 	private	HashMap<String, PrintStream> clientes;
 	private List<String> nomeCliente;
+
+	private PublicKey chavePublica;
+	private PrivateKey chavePrivada;
 	
 	public Servidor (int porta) {
 		this.porta = porta;
 		this.clientes = new	HashMap<>();
 		this.nomeCliente = new ArrayList<>();
 	}
+
+	public String encriptar(String txt) throws Exception {
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, this.chavePublica);
+		byte[] encryptedBytes = cipher.doFinal(txt.getBytes());
+		return Base64.getEncoder().encodeToString(encryptedBytes);
+	}
+
+	public String decriptar(String txtEncriptado) throws Exception {
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.DECRYPT_MODE, this.chavePrivada);
+		byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(txtEncriptado));
+		return new String(decryptedBytes);
+	}
+
+	public String getStringChavePublica() {
+		return Base64.getEncoder().encodeToString(chavePublica.getEncoded());
+	}
+
 	@SuppressWarnings("resource")
 	public void executa () throws IOException {
 		//Cria o servidor na porta especificado pelo usuario
@@ -48,10 +70,11 @@ public class Servidor	{
 			if(s.hasNextLine()) {
 				nome = s.nextLine();
 			}
-			
+
 			this.clientes.put(nome, ps);
 			this.nomeCliente.add(nome);
 			TrataCliente tc = new TrataCliente(is,	this, nome);
+
 			//Inicia uma nova thread
 			new	Thread(tc).start();
 			this.distribuiMensagem(nome, "NC: " + nome);
@@ -91,9 +114,9 @@ public class Servidor	{
 		cliente.println("MS: " + message);
 		
 	}
-	public void enviarArquivo(String sender, String reciever, String message, File dadosArquivo) {
+	public void enviarArquivo(String sender, String receiver, String message, File dadosArquivo) {
 		//Envia um arquivo para um cliente especifico
-		PrintStream cliente = clientes.get(reciever);
+		PrintStream cliente = clientes.get(receiver);
 		FileInputStream fileInputStream;
 		cliente.println("FL: " + message);
 		try {
@@ -113,9 +136,9 @@ public class Servidor	{
 		}
 	}
 	
-	public void enviarArquivo(String nomeSender, String reciever, String message, InputStream dadosArquivo) {
+	public void enviarArquivo(String nomeSender, String receiver, String message, InputStream dadosArquivo) {
 		//Envia um arquvio para um cliente especifico
-		PrintStream cliente = clientes.get(reciever);
+		PrintStream cliente = clientes.get(receiver);
 		cliente.println("FL: " + message);
 		int i = 0;
 		while( i < 1000000 ) {
@@ -165,6 +188,14 @@ public class Servidor	{
 			e.printStackTrace();
 		}
 	}
+
+	public void enviarChaveRSA(String receiver){
+		//Envia uma mensagem para um cliente especifico
+		PrintStream cliente = clientes.get(receiver);
+		String chave = getStringChavePublica();
+		cliente.println("RSAPK;" + chave);
+	}
+
 	public void removerCliente(String nome) {
 		//Disconecta um cliente e avisa para os restantes
 		clientes.remove(nome);

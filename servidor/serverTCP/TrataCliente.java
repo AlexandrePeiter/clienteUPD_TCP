@@ -17,13 +17,13 @@ public class TrataCliente implements Runnable	{
 		//	quando	chegar	uma	msg,	distribui	pra	todos
 		Scanner	s	=	new	Scanner(this.cliente);
 		while	(s.hasNextLine())	{
-			String menssagem = s.nextLine();
-			String [] dados = menssagem.split(";", 3);
-			
+			String mensagem = s.nextLine();
+			String [] dados = mensagem.split(";", 3);
+
 			if(dados[0].equals("msg"))
 				tratarMensagens(dados);
 			else if (dados[0].equals("arq"))
-				tratarArquivo(dados);	
+				tratarArquivo(dados);
 			else if (dados[0].equals("OUT"))
 				servidor.removerCliente(dados[1]);
 		}
