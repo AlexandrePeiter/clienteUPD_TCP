@@ -46,10 +46,11 @@ public class RSAUtils {
         return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
-    public static String decrypt(byte[] encryptedBytes, PrivateKey privateKey) throws NoSuchAlgorithmException,
+    public static String decrypt(String encryptedString, PrivateKey privateKey) throws NoSuchAlgorithmException,
             NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedString);
         byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
         return new String(decryptedBytes);
     }

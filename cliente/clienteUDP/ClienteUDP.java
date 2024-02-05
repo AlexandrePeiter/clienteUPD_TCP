@@ -18,8 +18,8 @@ public class ClienteUDP {
 	DatagramSocket aSocket;
 	RecebedorUDP r;
 
-	PublicKey publicKey;
-	PrivateKey privateKey;
+	private PublicKey publicKey;
+	private PrivateKey privateKey;
 
 	public ClienteUDP(String host, int porta, ViewClienteUDP viewClienteUDP) {
 		this.host = host;
@@ -114,5 +114,9 @@ public class ClienteUDP {
         aSocket.send(pacoteFim);
         System.out.println("Enviando fim de arquivo");
         fileInputStream.close();		
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
 	}
 }

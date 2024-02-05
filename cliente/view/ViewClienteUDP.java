@@ -45,6 +45,8 @@ import javax.swing.SwingConstants;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class ViewClienteUDP extends JFrame {
 
@@ -134,37 +136,24 @@ public class ViewClienteUDP extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				String destino = list.getSelectedItem();
 				String mensagem = textField_1.getText();
-				String msgEncriptada;
-
-				try {
-					msgEncriptada = RSAUtils.encryptToString(mensagem, chavesClientes.get(destino));
-				}
-				catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
-					  IllegalBlockSizeException | BadPaddingException exception){
-					throw new RuntimeException("Erro ao criptografar a mensagem", exception);
-				}
-
-				System.out.println(destino + ";" + nome + ": " + mensagem);
-				textField_1.setText("");
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
 				String horaSistema = LocalDateTime.now().format(formatter);
-				if (arquivo == null) {
-					clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + msgEncriptada);
+
+				if(destino.equals("broadcast")){
+					for (Map.Entry<String, PublicKey> chat : chavesClientes.entrySet()){
+						enviarMensagem(chat.getKey(), mensagem, horaSistema);
+					}
+				}
+				else {
+					enviarMensagem(destino, mensagem, horaSistema);
+				}
+
+				if(arquivo == null)
 					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
 							Alignment.RIGHT, Color.BLUE);
-				} else {
-					try {
-						clienteUDP.sendArquivo("FL: " + destino + ";" + "(" + horaSistema + ") " + nome + ";" + "UDP" + arquivo.getName(),
-								arquivo);
-						addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
-								Alignment.RIGHT, Color.BLUE);
-					} catch (Exception e1) {
-						e1.printStackTrace();
-					}
-					arquivo = null;
-				}
-				textField_1.setEditable(true);
+				else
+					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
+						Alignment.RIGHT, Color.BLUE);
 			}
 		});
 
@@ -252,7 +241,38 @@ public class ViewClienteUDP extends JFrame {
 		panel_2.add(lblNewLabel_2, BorderLayout.NORTH);
 	}
 
-	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException {
+	private void enviarMensagem(String destino, String mensagem, String horaSistema){
+		String msgEncriptada;
+
+		System.out.println(destino + ";" + nome + ": " + mensagem);
+		textField_1.setText("");
+		String msgCompleta = arquivo == null ?
+				"(" + horaSistema + ") " + nome + ": " + mensagem
+				: "(" + horaSistema + ") " + nome + ";" + "UDP" + arquivo.getName();
+
+		try {
+			msgEncriptada = RSAUtils.encryptToString(msgCompleta, chavesClientes.get(destino));
+		}
+		catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+			  IllegalBlockSizeException | BadPaddingException exception){
+			throw new RuntimeException("Erro ao criptografar a mensagem", exception);
+		}
+
+		if (arquivo == null) {
+			clienteUDP.send("MG: " + destino + ";" + msgEncriptada);
+		} else {
+			try {
+				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada,
+						arquivo);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			arquivo = null;
+		}
+		textField_1.setEditable(true);
+	}
+
+	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		System.out.println("Msg: " + mensagem);
 		if (mensagem.startsWith("NC: ")) {
 			String[] split = mensagem.substring(4).split(";");
@@ -265,7 +285,8 @@ public class ViewClienteUDP extends JFrame {
 			chavesClientes.put(nomeCliente, key);
 		} else {
 			// System.out.println("Escrevendo mensagem" + mensagem);
-			addTextWithAlignment(styledDoc, mensagem + "\n", Alignment.LEFT, Color.BLACK);
+			String msg = RSAUtils.decrypt(mensagem, clienteUDP.getPrivateKey());
+			addTextWithAlignment(styledDoc, msg + "\n", Alignment.LEFT, Color.BLACK);
 			// textField.set
 		}
 		// System.out.println("mensagem: " + mensagem);

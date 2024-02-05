@@ -5,6 +5,7 @@ import java.security.PublicKey;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.io.*;
@@ -160,11 +161,13 @@ public class ServerUDP {
 
 	private void trataNovaMensagem(DatagramPacket request, String mensagem) throws IOException {
 		mensagem = mensagem.substring(4);
-		String dados[] = mensagem.split(";", 3);
+		System.out.println(mensagem);
+		String[] dados = mensagem.split(";", 3);
+		System.out.print(Arrays.toString(dados));
 		String sender = dados[1].substring(19);
 		System.out.println("Servidor " + mensagem + " sender " + sender);
 
-		String mensagemCompleta = dados[1] + dados[2];
+		String mensagemCompleta = dados[1];
 		byte[] enviarMensagem = mensagemCompleta.getBytes();
 
 		DatagramPacket sendData = new DatagramPacket(enviarMensagem, enviarMensagem.length);
