@@ -5,10 +5,12 @@ import java.net.*;
 import cliente.view.ViewClienteUDP;
 import rsa.RSAUtils;
 
+import javax.crypto.Cipher;
 import java.io.*;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Random;
 
 public class ClienteUDP {
 	
@@ -88,8 +90,9 @@ public class ClienteUDP {
 		byte [] mensagemIncial = string.getBytes();
 		
         FileInputStream fileInputStream = new FileInputStream(arquivo);
+		Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKey);
 
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[245];
         int bytesRead;
 
         InetAddress aHost;
@@ -101,12 +104,15 @@ public class ClienteUDP {
 		while ((bytesRead = fileInputStream.read(buffer)) != -1) {
 			int n_pacote_recebido;
 
-			DatagramPacket pacote = new DatagramPacket(buffer, bytesRead, aHost, porta);
+			byte[] encryptedBuffer = cipher.doFinal(buffer);
+			System.out.println(bytesRead + " " + encryptedBuffer.length);
+			DatagramPacket pacote = new DatagramPacket(encryptedBuffer, 256, aHost, porta);
 
 			aSocket.send(pacote);
 
 			do {
 				n_pacote_recebido = r.getAck();
+				System.out.println(n_pacote_recebido);
 			} while (n_pacote_recebido == -1);
 		}
         byte[] fim = new byte[0];

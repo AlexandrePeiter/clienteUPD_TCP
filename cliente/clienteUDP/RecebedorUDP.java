@@ -1,5 +1,6 @@
 package cliente.clienteUDP;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -47,7 +48,7 @@ public class RecebedorUDP implements Runnable {
 					view.removerCliente(mensagem);
 				} else {
 					//Mensagem comum
-					view.receberMensagem(mensagem);
+					view.receberMensagem(mensagem, true);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -75,14 +76,23 @@ public class RecebedorUDP implements Runnable {
 		mensagem = mensagem.substring(4);
 		String[] dados = RSAUtils.decrypt(mensagem, this.privateKey).split(";", 2);
 		System.out.println(Arrays.toString(dados));
-		FileOutputStream fileOutputStream = new FileOutputStream("UDP//"+nome+"_"+dados[1]);
+
+		String path = "UDP";
+		File directory = new File(path);
+		if (!directory.exists()) {
+			if (directory.mkdirs())
+				System.out.println("Diretório criado com sucesso.");
+			else
+				System.out.println("Falha ao criar o diretório.");
+		}
+
+		FileOutputStream fileOutputStream = new FileOutputStream(path+"//"+nome+"_"+dados[1]);
 		
 		byte[] buffer = new byte[1024];
 		while (true) {
             DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
             aSocket.receive(pacote);
-            
-           
+
             if (pacote.getLength() == 0) {
             	System.out.println("Recebedor recebeu fim de arquivo");
                 break; // Fim do arquivo
@@ -95,12 +105,13 @@ public class RecebedorUDP implements Runnable {
             byte[] info_pacote = idPacote.getBytes();
             DatagramPacket enviar = new DatagramPacket(info_pacote, info_pacote.length, ipSender, portaSender);
             aSocket.send(enviar);
-         
+
+
             fileOutputStream.write(pacote.getData(), 0, pacote.getLength());
         }
 		System.out.println(nome+"_"+dados[1]);
         fileOutputStream.close();
-		view.receberMensagem(dados[0] + ": Enviou o arquivo " + dados[1]);
+		view.receberMensagem(dados[0] + ": Enviou o arquivo " + dados[1], false);
 	}
 
 }

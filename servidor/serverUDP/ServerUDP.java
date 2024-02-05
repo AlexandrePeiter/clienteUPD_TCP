@@ -72,7 +72,7 @@ public class ServerUDP {
 		// Verifica o nome do arquivo
 		mensagem = mensagem.substring(4);
 		String[] dados = mensagem.split(";", 3);
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		// Criar um novo arquivo
 		File file = new File("Servidor_" + UUID.randomUUID());
 		FileOutputStream fileOutput = new FileOutputStream(file);

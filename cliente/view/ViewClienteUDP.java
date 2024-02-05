@@ -154,6 +154,8 @@ public class ViewClienteUDP extends JFrame {
 				else
 					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
 						Alignment.RIGHT, Color.BLUE);
+
+				textField_1.setEditable(true);
 			}
 		});
 
@@ -171,13 +173,23 @@ public class ViewClienteUDP extends JFrame {
 					textField_1.setText("");
 
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
 					String horaSistema = LocalDateTime.now().format(formatter);
 
-					if (arquivo == null)
-						clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + mensagem);
-					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
-							Alignment.RIGHT, Color.BLUE);
+					if(destino.equals("broadcast")){
+						for (Map.Entry<String, PublicKey> chat : chavesClientes.entrySet()){
+							enviarMensagem(chat.getKey(), mensagem, horaSistema);
+						}
+					}
+					else {
+						enviarMensagem(destino, mensagem, horaSistema);
+					}
+
+					if(arquivo == null)
+						addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
+								Alignment.RIGHT, Color.BLUE);
+					else
+						arquivo = null;
+
 					textField_1.setEditable(true);
 				}
 			}
@@ -250,8 +262,10 @@ public class ViewClienteUDP extends JFrame {
 				"(" + horaSistema + ") " + nome + ": " + mensagem
 				: "(" + horaSistema + ") " + nome + ";" + "UDP" + arquivo.getName();
 
+		PublicKey publicKeyRecebedor = chavesClientes.get(destino);
+
 		try {
-			msgEncriptada = RSAUtils.encryptToString(msgCompleta, chavesClientes.get(destino));
+			msgEncriptada = RSAUtils.encryptToString(msgCompleta, publicKeyRecebedor);
 		}
 		catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
 			  IllegalBlockSizeException | BadPaddingException exception){
@@ -262,6 +276,7 @@ public class ViewClienteUDP extends JFrame {
 			clienteUDP.send("MG: " + destino + ";" + msgEncriptada);
 		} else {
 			try {
+				// byte[] arquivoEncriptado = RSAUtils.encrypt(arquivo)
 				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada,
 						arquivo);
 			} catch (Exception e1) {
@@ -269,10 +284,9 @@ public class ViewClienteUDP extends JFrame {
 			}
 			arquivo = null;
 		}
-		textField_1.setEditable(true);
 	}
 
-	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+	public void receberMensagem(String mensagem, Boolean encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 		System.out.println("Msg: " + mensagem);
 		if (mensagem.startsWith("NC: ")) {
 			String[] split = mensagem.substring(4).split(";");
@@ -285,7 +299,7 @@ public class ViewClienteUDP extends JFrame {
 			chavesClientes.put(nomeCliente, key);
 		} else {
 			// System.out.println("Escrevendo mensagem" + mensagem);
-			String msg = RSAUtils.decrypt(mensagem, clienteUDP.getPrivateKey());
+			String msg = encrypted ? RSAUtils.decrypt(mensagem, clienteUDP.getPrivateKey()) : mensagem;
 			addTextWithAlignment(styledDoc, msg + "\n", Alignment.LEFT, Color.BLACK);
 			// textField.set
 		}
