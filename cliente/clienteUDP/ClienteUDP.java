@@ -45,7 +45,7 @@ public class ClienteUDP {
 		DatagramPacket request = new DatagramPacket(m, m.length, aHost, porta);
 		aSocket.send(request);
 		
-		r = new RecebedorUDP(aSocket, view, nome);
+		r = new RecebedorUDP(aSocket, view, nome, privateKey);
 		new Thread(r).start();
 	}
 

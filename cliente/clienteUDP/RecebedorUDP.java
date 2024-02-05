@@ -4,9 +4,12 @@ import java.io.FileOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.PrivateKey;
+import java.util.Arrays;
 
 
 import cliente.view.ViewClienteUDP;
+import rsa.RSAUtils;
 
 public class RecebedorUDP implements Runnable {
 	
@@ -14,11 +17,14 @@ public class RecebedorUDP implements Runnable {
 	DatagramSocket aSocket;
 	private int ack;
 	private String nome;
+
+	private PrivateKey privateKey;
 	
-	public RecebedorUDP(DatagramSocket aSocket, ViewClienteUDP view, String nome) {
+	public RecebedorUDP(DatagramSocket aSocket, ViewClienteUDP view, String nome, PrivateKey privateKey) {
 		this.view = view;
 		this.aSocket = aSocket;
 		this.nome = nome;
+		this.privateKey = privateKey;
 	}
 	@Override
 	public void run() {
@@ -67,7 +73,8 @@ public class RecebedorUDP implements Runnable {
 	private void trataArquivo(String mensagem) throws Exception {
 		//Cria um arquivo a partir dos dados recebidos
 		mensagem = mensagem.substring(4);
-		String dados[] = mensagem.split(";", 2);
+		String[] dados = RSAUtils.decrypt(mensagem, this.privateKey).split(";", 2);
+		System.out.println(Arrays.toString(dados));
 		FileOutputStream fileOutputStream = new FileOutputStream("UDP//"+nome+"_"+dados[1]);
 		
 		byte[] buffer = new byte[1024];

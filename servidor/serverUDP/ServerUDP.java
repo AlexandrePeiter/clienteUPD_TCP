@@ -4,10 +4,7 @@ import java.net.*;
 import java.security.PublicKey;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.io.*;
 
 public class ServerUDP {
@@ -74,10 +71,10 @@ public class ServerUDP {
 
 		// Verifica o nome do arquivo
 		mensagem = mensagem.substring(4);
-		String dados[] = mensagem.split(";", 3);
+		String[] dados = mensagem.split(";", 3);
 		byte[] buffer = new byte[1024];
 		// Criar um novo arquivo
-		File file = new File("Servidor_" + dados[2]);
+		File file = new File("Servidor_" + UUID.randomUUID());
 		FileOutputStream fileOutput = new FileOutputStream(file);
 
 		// Recebe os dados referentes ao arquivo até a chegada do pacote "final" com
@@ -118,8 +115,9 @@ public class ServerUDP {
 
 	private void TransmitirArquivo(File file, String mensagem, String reciver) throws IOException {
 		// Mensagem inicial para o recebedor se preparar para receber um arquivo
-		String dados[] = mensagem.split(";", 3);
-		String response = "FL: " + dados[1] + ";" + dados[2];
+		String[] dados = mensagem.split(";", 3);
+		System.out.print(Arrays.toString(dados));
+		String response = "FL: " + dados[1];
 		byte[] m = response.getBytes();
 
 		// Ip e porta do recebedor
@@ -173,10 +171,10 @@ public class ServerUDP {
 		DatagramPacket sendData = new DatagramPacket(enviarMensagem, enviarMensagem.length);
 
 		if (dados[0].equals("broadcast")) {
-			for (String nomeReciever : nomeCliente) {
-				if (!nomeReciever.equals(sender)) {
-					InetAddress ipCliete = ipClientes.get(nomeReciever);
-					int portaCliente = portaClientes.get(nomeReciever);
+			for (String nomeReceiver : nomeCliente) {
+				if (!nomeReceiver.equals(sender)) {
+					InetAddress ipCliete = ipClientes.get(nomeReceiver);
+					int portaCliente = portaClientes.get(nomeReceiver);
 					sendData.setAddress(ipCliete);
 					sendData.setPort(portaCliente);
 					aSocket.send(sendData);
