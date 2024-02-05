@@ -3,8 +3,12 @@ package cliente.clienteUDP;
 import java.net.*;
 
 import cliente.view.ViewClienteUDP;
+import rsa.RSAUtils;
 
 import java.io.*;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 public class ClienteUDP {
 	
@@ -13,16 +17,27 @@ public class ClienteUDP {
 	private ViewClienteUDP view;
 	DatagramSocket aSocket;
 	RecebedorUDP r;
+
+	PublicKey publicKey;
+	PrivateKey privateKey;
+
 	public ClienteUDP(String host, int porta, ViewClienteUDP viewClienteUDP) {
 		this.host = host;
 		this.porta = porta;
 		this.view = viewClienteUDP;
 	}
 	public void executa(String nomeCliente) throws Exception {
-		//Avisa ao servidor que irá começar a eniviar mensagens
+		//Avisa ao servidor que irá começar a enviar mensagens
+		KeyPair keys = RSAUtils.gerarChaves();
+		this.publicKey = keys.getPublic();
+		this.privateKey = keys.getPrivate();
+
+		String publicKeyStr = RSAUtils.encodeKeyToBase64(publicKey);
+		System.out.println(publicKeyStr);
+
 		String nome = nomeCliente;
-		nomeCliente = "NC: " + nomeCliente;
-		
+		nomeCliente = "NC: " + nomeCliente + ";" + publicKeyStr;
+
 		aSocket = new DatagramSocket();
 		byte[] m = nomeCliente.getBytes();
 		InetAddress aHost = InetAddress.getByName(host);

@@ -1,6 +1,7 @@
 package servidor.serverUDP;
 
 import java.net.*;
+import java.security.PublicKey;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class ServerUDP {
 	private int porta;
 	private HashMap<String, InetAddress> ipClientes;
 	private HashMap<String, Integer> portaClientes;
+	private HashMap<String, String> chavesClientes;
 	private List<String> nomeCliente;
 	DatagramSocket aSocket;
 
@@ -30,6 +32,7 @@ public class ServerUDP {
 		this.ipClientes = new HashMap<>();
 		this.portaClientes = new HashMap<>();
 		this.nomeCliente = new ArrayList<>();
+		this.chavesClientes = new HashMap<>();
 	}
 
 	public void executa() {
@@ -159,7 +162,7 @@ public class ServerUDP {
 		mensagem = mensagem.substring(4);
 		String dados[] = mensagem.split(";", 3);
 		String sender = dados[1].substring(19);
-		System.out.println("Sevidor " + mensagem + " sender " + sender);
+		System.out.println("Servidor " + mensagem + " sender " + sender);
 
 		String mensagemCompleta = dados[1] + dados[2];
 		byte[] enviarMensagem = mensagemCompleta.getBytes();
@@ -179,6 +182,7 @@ public class ServerUDP {
 		} else {
 			InetAddress ipCliete = ipClientes.get(dados[0]);
 			int portaCliente = portaClientes.get(dados[0]);
+			System.out.println(portaCliente);
 			sendData.setAddress(ipCliete);
 			sendData.setPort(portaCliente);
 			aSocket.send(sendData);
@@ -188,19 +192,24 @@ public class ServerUDP {
 
 	private void trataNovoCliente(DatagramPacket request, String mensagem) throws IOException {
 		mensagem = mensagem.substring(4);
-		String nome = mensagem;
+		String[] splitMsg = mensagem.split(";");
+		String nome = splitMsg[0];
+		String publicKeySender = splitMsg[1];
 
 		InetAddress ipSender = request.getAddress();
 		int portaSender = request.getPort();
 
 		ipClientes.put(nome, ipSender);
 		portaClientes.put(nome, portaSender);
-		String enviar = "NC: " + nome;
+		chavesClientes.put(nome, publicKeySender);
+		String enviar = "NC: " + nome + ";" + publicKeySender;
+		System.out.println(enviar);
 		byte[] novoCliente = enviar.getBytes();
 		DatagramPacket novoClienteReplay = new DatagramPacket(novoCliente, novoCliente.length);
 
 		for (String nomeClien : nomeCliente) {
-			byte[] clienteAntigo = ("NC: " + nomeClien).getBytes();
+			String publicKeyClienteNovo = chavesClientes.get(nomeClien);
+			byte[] clienteAntigo = ("NC: " + nomeClien + ";" + publicKeyClienteNovo).getBytes();
 
 			InetAddress ipCliete = ipClientes.get(nomeClien);
 			int portaCliente = portaClientes.get(nomeClien);

@@ -11,9 +11,16 @@ import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -30,12 +37,14 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import cliente.clienteUDP.ClienteUDP;
+import rsa.RSAUtils;
 
 
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
 
 public class ViewClienteUDP extends JFrame {
 
@@ -47,6 +56,7 @@ public class ViewClienteUDP extends JFrame {
 	private ClienteUDP clienteUDP;
 	private ViewClienteUDP this_viewClienteUDP;
 	private List list;
+	private HashMap<String, PublicKey> chavesClientes = new HashMap<>();
 	private String nome;
 	private String nomeArquivo;
 	private File arquivo;
@@ -122,19 +132,28 @@ public class ViewClienteUDP extends JFrame {
 		JButton btnNewButton_1 = new JButton("Enviar");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String mensagem = textField_1.getText();
 				String destino = list.getSelectedItem();
+				String mensagem = textField_1.getText();
+				String msgEncriptada;
+
+				try {
+					msgEncriptada = RSAUtils.encryptToString(mensagem, chavesClientes.get(destino));
+				}
+				catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+					  IllegalBlockSizeException | BadPaddingException exception){
+					throw new RuntimeException("Erro ao criptografar a mensagem", exception);
+				}
+
 				System.out.println(destino + ";" + nome + ": " + mensagem);
 				textField_1.setText("");
 				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
 				String horaSistema = LocalDateTime.now().format(formatter);
 				if (arquivo == null) {
-					clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + mensagem);
+					clienteUDP.send("MG: " + destino + ";" + "(" + horaSistema + ") " + nome + ";: " + msgEncriptada);
 					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
 							Alignment.RIGHT, Color.BLUE);
-				}
-				else {
+				} else {
 					try {
 						clienteUDP.sendArquivo("FL: " + destino + ";" + "(" + horaSistema + ") " + nome + ";" + "UDP" + arquivo.getName(),
 								arquivo);
@@ -233,9 +252,17 @@ public class ViewClienteUDP extends JFrame {
 		panel_2.add(lblNewLabel_2, BorderLayout.NORTH);
 	}
 
-	public void receberMensagem(String mensagem) {
+	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException {
+		System.out.println("Msg: " + mensagem);
 		if (mensagem.startsWith("NC: ")) {
-			list.add(mensagem.substring(4));
+			String[] split = mensagem.substring(4).split(";");
+			String nomeCliente = split[0];
+			String chaveCliente = split[1];
+			PublicKey key =  RSAUtils.decodeBase64PublicKey(chaveCliente);
+			System.out.println(chaveCliente);
+			System.out.println(key);
+			list.add(nomeCliente);
+			chavesClientes.put(nomeCliente, key);
 		} else {
 			// System.out.println("Escrevendo mensagem" + mensagem);
 			addTextWithAlignment(styledDoc, mensagem + "\n", Alignment.LEFT, Color.BLACK);
@@ -252,15 +279,15 @@ public class ViewClienteUDP extends JFrame {
 		SimpleAttributeSet set = new SimpleAttributeSet();
 
 		switch (alignment) {
-		case LEFT:
-			StyleConstants.setAlignment(set, StyleConstants.ALIGN_LEFT);
-			break;
-		case CENTER:
-			StyleConstants.setAlignment(set, StyleConstants.ALIGN_CENTER);
-			break;
-		case RIGHT:
-			StyleConstants.setAlignment(set, StyleConstants.ALIGN_RIGHT);
-			break;
+			case LEFT:
+				StyleConstants.setAlignment(set, StyleConstants.ALIGN_LEFT);
+				break;
+			case CENTER:
+				StyleConstants.setAlignment(set, StyleConstants.ALIGN_CENTER);
+				break;
+			case RIGHT:
+				StyleConstants.setAlignment(set, StyleConstants.ALIGN_RIGHT);
+				break;
 		}
 
 		// Define a cor do texto (aqui, usamos preto)
