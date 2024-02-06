@@ -3,9 +3,13 @@ package cliente.clienteTCP;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import cliente.view.ViewClienteTCP;
+import rsa.RSAUtils;
 
 public class Cliente	{
 	
@@ -18,23 +22,32 @@ public class Cliente	{
 	String nome;
 	ViewClienteTCP view;
 
-	PublicKey chavePublicaServidor;
+	PublicKey publicKey;
+	PrivateKey privateKey;
 
 	public	Cliente	(String	host,	int	porta, ViewClienteTCP view) {
 		this.host	=	host;
 		this.porta	=	porta;
 		this.view = view;
 	}
-	public void executa(String nome) throws UnknownHostException, IOException, ClassNotFoundException {
+	public void executa(String nome) throws UnknownHostException, IOException, ClassNotFoundException, NoSuchAlgorithmException {
 		//Cria uma conex�o com o servidor
 		cliente	=	new	Socket(this.host,	this.porta);
 		System.out.println("O cliente se conectou ao servidor!");
 		this.nome = nome;
 
+		KeyPair keys = RSAUtils.gerarChaves();
+		this.publicKey = keys.getPublic();
+		this.privateKey = keys.getPrivate();
+
+		String publicKeyStr = RSAUtils.encodeKeyToBase64(publicKey);
+		System.out.println(publicKeyStr);
+
 		r = new Recebedor(cliente.getInputStream(), view, nome);
 		new Thread(r).start();
 		saida = new	PrintStream(cliente.getOutputStream());
 		saida.println(nome);
+		saida.println(publicKeyStr);
 		
 	}
 	public void send(String str) {

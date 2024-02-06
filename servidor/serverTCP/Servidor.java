@@ -16,6 +16,7 @@ public class Servidor	{
 	
 	private int	porta;
 	private	HashMap<String, PrintStream> clientes;
+	private HashMap<String, String> chavesClientes;
 	private List<String> nomeCliente;
 
 	private PublicKey chavePublica;
@@ -24,6 +25,7 @@ public class Servidor	{
 	public Servidor (int porta) {
 		this.porta = porta;
 		this.clientes = new	HashMap<>();
+		this.chavesClientes = new HashMap();
 		this.nomeCliente = new ArrayList<>();
 	}
 
@@ -62,12 +64,14 @@ public class Servidor	{
 			
 			InputStream is = cliente.getInputStream();
 			Scanner	s	=	new	Scanner(is);
-			String nome = "";
+			String nome = "", publicKeyCliente = "";
 			if(s.hasNextLine()) {
 				nome = s.nextLine();
+				publicKeyCliente = s.nextLine();
 			}
 
 			this.clientes.put(nome, ps);
+			this.chavesClientes.put(nome, publicKeyCliente);
 			this.nomeCliente.add(nome);
 			TrataCliente tc = new TrataCliente(is,	this, nome);
 

@@ -14,9 +14,16 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -35,8 +42,11 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import cliente.clienteTCP.Cliente;
+import rsa.RSAUtils;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 
 public class ViewClienteTCP extends JFrame {
 
@@ -48,6 +58,7 @@ public class ViewClienteTCP extends JFrame {
 	private Cliente cliente;
 	private ViewClienteTCP this_viewClienteTCP;
 	private List list;
+	private HashMap<String, PublicKey> chavesClientes = new HashMap<>();
 	private String nome;
 	private String nomeArquivo;
 	private File arquivo;
@@ -264,11 +275,15 @@ public class ViewClienteTCP extends JFrame {
 		LEFT, CENTER, RIGHT
 	}
 
-	public void receberMensagem(String mensagem) {
+	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
 		if (mensagem.startsWith("NC: ")) {
-
-			list.add(mensagem.substring(4));
+			String[] split = mensagem.substring(4).split(";");
+			String nomeCliente = split[0];
+			String chaveCliente = split[1];
+			PublicKey key =  RSAUtils.decodeBase64PublicKey(chaveCliente);
+			list.add(nomeCliente);
+			chavesClientes.put(nomeCliente, key);
 			if (list.getSelectedIndex() == -1) {
 				list.select(0);
 			}
@@ -346,12 +361,12 @@ public class ViewClienteTCP extends JFrame {
          					txtNomeDoCliente.setEnabled(false);
          				} catch (IOException e1) {
          					JOptionPane.showMessageDialog(frame, "Erro: Servidor não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
-         				} catch (ClassNotFoundException ex) {
+         				} catch (ClassNotFoundException | NoSuchAlgorithmException ex) {
                             throw new RuntimeException(ex);
                         }
 
 
-                        frame.dispose(); // Fechar a janela após a confirmação
+						frame.dispose(); // Fechar a janela após a confirmação
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(frame, "Erro: O valor inserido não é um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
                     }
@@ -369,6 +384,41 @@ public class ViewClienteTCP extends JFrame {
         frame.getContentPane().add(panel, BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);
+	}
+
+	private void enviarMensagem(String destino, String mensagem, String horaSistema){
+		String msgEncriptada;
+
+		System.out.println(destino + ";" + nome + ": " + mensagem);
+		textField_1.setText("");
+		String msgCompleta = arquivo == null ?
+				"msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem
+				: "arq;" + destino + ";" + "(" + horaSistema + ") " + nome + ":  ;TCP"
+				+ arquivo.getName();;
+
+		PublicKey publicKeyRecebedor = chavesClientes.get(destino);
+
+		try {
+			msgEncriptada = RSAUtils.encryptToString(msgCompleta, publicKeyRecebedor);
+		}
+		catch(NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+			  IllegalBlockSizeException | BadPaddingException exception){
+			throw new RuntimeException("Erro ao criptografar a mensagem", exception);
+		}
+
+		if (arquivo == null) {
+			cliente.send("msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem);
+		} else {
+			try {
+				String mensagemEnvia = "arq;" + destino + ";" + "(" + horaSistema + ") " + nome + ":  ;TCP"
+						+ arquivo.getName();
+				cliente.sendArquivo(mensagemEnvia,
+						arquivo);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			arquivo = null;
+		}
 	}
 	public void removerCliente(String mensagem) {
 		mensagem = mensagem.substring(4);

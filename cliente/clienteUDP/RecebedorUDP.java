@@ -106,7 +106,6 @@ public class RecebedorUDP implements Runnable {
             DatagramPacket enviar = new DatagramPacket(info_pacote, info_pacote.length, ipSender, portaSender);
             aSocket.send(enviar);
 
-
             fileOutputStream.write(pacote.getData(), 0, pacote.getLength());
         }
 		System.out.println(nome+"_"+dados[1]);
