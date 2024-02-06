@@ -92,7 +92,7 @@ public class ClienteUDP {
         FileInputStream fileInputStream = new FileInputStream(arquivo);
 		Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKey);
 
-		byte[] buffer = new byte[245];
+		byte[] buffer = new byte[234];
         int bytesRead;
 
         InetAddress aHost;
@@ -104,9 +104,9 @@ public class ClienteUDP {
 		while ((bytesRead = fileInputStream.read(buffer)) != -1) {
 			int n_pacote_recebido;
 
-			byte[] encryptedBuffer = cipher.doFinal(buffer);
+			byte[] encryptedBuffer = cipher.doFinal(buffer, 0, bytesRead);
 			System.out.println(bytesRead + " " + encryptedBuffer.length);
-			DatagramPacket pacote = new DatagramPacket(encryptedBuffer, 256, aHost, porta);
+			DatagramPacket pacote = new DatagramPacket(encryptedBuffer, encryptedBuffer.length, aHost, porta);
 
 			aSocket.send(pacote);
 

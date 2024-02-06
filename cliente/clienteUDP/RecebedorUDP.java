@@ -1,16 +1,21 @@
 package cliente.clienteUDP;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.util.Arrays;
 
 
 import cliente.view.ViewClienteUDP;
 import rsa.RSAUtils;
+
+import javax.crypto.Cipher;
 
 public class RecebedorUDP implements Runnable {
 	
@@ -75,7 +80,7 @@ public class RecebedorUDP implements Runnable {
 		//Cria um arquivo a partir dos dados recebidos
 		mensagem = mensagem.substring(4);
 		String[] dados = RSAUtils.decrypt(mensagem, this.privateKey).split(";", 2);
-		System.out.println(Arrays.toString(dados));
+		//System.out.println(Arrays.toString(dados));
 
 		String path = "UDP";
 		File directory = new File(path);
@@ -86,12 +91,16 @@ public class RecebedorUDP implements Runnable {
 				System.out.println("Falha ao criar o diretório.");
 		}
 
+		FileOutputStream fileOutputStreamTemp = new FileOutputStream(path+"//temp");
 		FileOutputStream fileOutputStream = new FileOutputStream(path+"//"+nome+"_"+dados[1]);
+		Cipher cipher = RSAUtils.getCipherDecryptInstance(privateKey);
 		
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		while (true) {
             DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
             aSocket.receive(pacote);
+
+			System.out.println("pacote length " + pacote.getLength());
 
             if (pacote.getLength() == 0) {
             	System.out.println("Recebedor recebeu fim de arquivo");
@@ -106,11 +115,27 @@ public class RecebedorUDP implements Runnable {
             DatagramPacket enviar = new DatagramPacket(info_pacote, info_pacote.length, ipSender, portaSender);
             aSocket.send(enviar);
 
-
-            fileOutputStream.write(pacote.getData(), 0, pacote.getLength());
+			//byte[] decryptedData = cipher.doFinal(pacote.getData(), 0, pacote.getLength());
+			fileOutputStreamTemp.write(pacote.getData(), 0, pacote.getLength());
         }
+		fileOutputStreamTemp.close();
+
+		File fileComplete = new File(path+"//temp");
+		FileInputStream fileInputStream = new FileInputStream(fileComplete);
+
+		int bytesRead, n =0;
+		byte[] buffer2 = new byte[256];
+		while ((bytesRead = fileInputStream.read(buffer2)) != -1) {
+			n++;
+			System.out.println(bytesRead);
+			byte[] decryptedData = cipher.doFinal(buffer2, 0, bytesRead);
+			fileOutputStream.write(decryptedData, 0, decryptedData.length);
+		}
+
+		fileOutputStream.close();
+		fileInputStream.close();
+
 		System.out.println(nome+"_"+dados[1]);
-        fileOutputStream.close();
 		view.receberMensagem(dados[0] + ": Enviou o arquivo " + dados[1], false);
 	}
 
