@@ -136,11 +136,9 @@ public class Servidor	{
 			while ((bytesRead = dadosArquivo.read(buffer)) != -1) {
 				cliente.write(buffer, 0, bytesRead);
 				if (bytesRead != 256) {
-					dadosArquivo.close();
 					break;
 				}
 			}
-			dadosArquivo.close();
 			System.out.println("saiu do while");
 		} catch (IOException e) {
 			e.printStackTrace();
