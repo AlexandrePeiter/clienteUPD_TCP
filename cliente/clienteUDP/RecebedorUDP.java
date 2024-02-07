@@ -12,6 +12,8 @@ import java.util.Arrays;
 import cliente.view.ViewClienteUDP;
 import rsa.RSAUtils;
 
+import javax.crypto.Cipher;
+
 public class RecebedorUDP implements Runnable {
 	
 	private ViewClienteUDP view;
@@ -86,9 +88,10 @@ public class RecebedorUDP implements Runnable {
 				System.out.println("Falha ao criar o diretório.");
 		}
 
+		Cipher cipher = RSAUtils.getCipherDecryptInstance(privateKey);
 		FileOutputStream fileOutputStream = new FileOutputStream(path+"//"+nome+"_"+dados[1]);
 		
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		while (true) {
             DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
             aSocket.receive(pacote);
@@ -97,7 +100,9 @@ public class RecebedorUDP implements Runnable {
             	System.out.println("Recebedor recebeu fim de arquivo");
                 break; // Fim do arquivo
             }
-            
+
+
+			byte[] decryptedData = cipher.doFinal(pacote.getData(), 0, pacote.getLength());
           //Envia um ack para quem está enviando, informando que o pacote chegou
             InetAddress ipSender = pacote.getAddress();
     		int portaSender = pacote.getPort();
@@ -106,7 +111,8 @@ public class RecebedorUDP implements Runnable {
             DatagramPacket enviar = new DatagramPacket(info_pacote, info_pacote.length, ipSender, portaSender);
             aSocket.send(enviar);
 
-            fileOutputStream.write(pacote.getData(), 0, pacote.getLength());
+
+            fileOutputStream.write(decryptedData, 0, decryptedData.length);
         }
 		System.out.println(nome+"_"+dados[1]);
         fileOutputStream.close();
