@@ -74,7 +74,7 @@ public class ServerUDP {
 		String[] dados = mensagem.split(";", 3);
 		byte[] buffer = new byte[1024];
 		// Criar um novo arquivo
-		File file = new File("Servidor_" + UUID.randomUUID());
+		File file = new File("Servidor111_" + UUID.randomUUID()+".txt");
 		FileOutputStream fileOutput = new FileOutputStream(file);
 
 		// Recebe os dados referentes ao arquivo até a chegada do pacote "final" com
@@ -111,7 +111,7 @@ public class ServerUDP {
 			aSocket.send(enviar);
 		}
 		fileOutput.close();
-		file.delete();
+		//file.delete();
 	}
 
 	private void TransmitirArquivo(File file, String mensagem, String reciver) throws IOException {

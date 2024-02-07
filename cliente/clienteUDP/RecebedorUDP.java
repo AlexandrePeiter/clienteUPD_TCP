@@ -131,7 +131,7 @@ public class RecebedorUDP implements Runnable {
 			byte[] decryptedData = cipher.doFinal(buffer2, 0, bytesRead);
 			fileOutputStream.write(decryptedData, 0, decryptedData.length);
 		}
-
+		
 		fileOutputStream.close();
 		fileInputStream.close();
 

@@ -46,7 +46,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
 
 public class ViewClienteUDP extends JFrame {
 
@@ -179,6 +179,7 @@ public class ViewClienteUDP extends JFrame {
 						for (Map.Entry<String, PublicKey> chat : chavesClientes.entrySet()){
 							enviarMensagem(chat.getKey(), mensagem, horaSistema);
 						}
+						arquivo = null;
 					}
 					else {
 						enviarMensagem(destino, mensagem, horaSistema);
@@ -271,18 +272,21 @@ public class ViewClienteUDP extends JFrame {
 			  IllegalBlockSizeException | BadPaddingException exception){
 			throw new RuntimeException("Erro ao criptografar a mensagem", exception);
 		}
-
+		
 		if (arquivo == null) {
 			clienteUDP.send("MG: " + destino + ";" + msgEncriptada);
 		} else {
+			System.out.println("Enviando o arquivo para " + destino);
 			try {
 				// byte[] arquivoEncriptado = RSAUtils.encrypt(arquivo)
 				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada,
-						arquivo);
+						arquivo, publicKeyRecebedor);
+				int i = 0;
+				while(i < 100000) i++;
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			arquivo = null;
+			
 		}
 	}
 
