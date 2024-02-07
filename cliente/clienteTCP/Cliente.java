@@ -70,11 +70,10 @@ public class Cliente	{
 			int bytesRead;
 			System.out.println("Começando a enviar");
 			while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-				byte[] encryptedBuffer = cipher.doFinal(buffer, 0, buffer.length);
-				System.out.println(bytesRead);
+				byte[] encryptedBuffer = cipher.doFinal(buffer);
 				saida.write(encryptedBuffer, 0, encryptedBuffer.length);
-				//saida.write(encryptedBuffer, 0, 256);
 			}
+			saida.write(new byte[1], 0, 1);
 			fileInputStream.close();
 			System.out.println("Terminando de enviar");
 		} catch (IOException e) {

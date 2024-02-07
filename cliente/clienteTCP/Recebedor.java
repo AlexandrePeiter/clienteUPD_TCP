@@ -79,11 +79,11 @@ public class Recebedor implements Runnable	{
 			int bytesRead;
 			System.out.println("Entrando no while recebedor");
 			while ((bytesRead = servidor.read(buffer)) != -1) {
-				System.out.println(bytesRead);
-				var desencryptedBytes = cipher.doFinal(buffer, 0, buffer.length);
-				fileOutputStream.write(desencryptedBytes, 0, desencryptedBytes.length);
-				// fileOutputStream.write(buffer, 0, bytesRead);
-				//System.out.println(bytesRead);
+				if(bytesRead != 1){
+					byte[] desencryptedBytes = cipher.doFinal(buffer);
+					fileOutputStream.write(desencryptedBytes, 0, desencryptedBytes.length);
+				}
+
 				if (bytesRead != 256)
 					break;
 			}

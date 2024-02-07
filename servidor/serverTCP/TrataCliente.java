@@ -1,6 +1,7 @@
 package servidor.serverTCP;
 
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
@@ -22,15 +23,20 @@ public class TrataCliente implements Runnable	{
 
 			if(dados[0].equals("msg"))
 				tratarMensagens(dados);
-			else if (dados[0].equals("arq"))
-				tratarArquivo(dados);
+			else if (dados[0].equals("arq")) {
+				try {
+					tratarArquivo(dados);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			}
 			else if (dados[0].equals("OUT"))
 				servidor.removerCliente(dados[1]);
 		}
 		s.close();
 
 	}
-	private void tratarArquivo(String[] dados) {
+	private void tratarArquivo(String[] dados) throws IOException {
 		servidor.enviarArquivo(nomeSender, dados[1], dados[2], cliente);
 	}
 	private void tratarMensagens(String[] dados) {
