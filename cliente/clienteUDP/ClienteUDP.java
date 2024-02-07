@@ -10,7 +10,6 @@ import java.io.*;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Random;
 
 public class ClienteUDP {
 	
@@ -85,12 +84,12 @@ public class ClienteUDP {
 		}
 	}
 
-	public void sendArquivo(String string, File arquivo) throws Exception {
+	public void sendArquivo(String string, File arquivo, PublicKey publicKeyRecebedor) throws Exception {
 		//Envia arquivo
 		byte [] mensagemIncial = string.getBytes();
 		
         FileInputStream fileInputStream = new FileInputStream(arquivo);
-		Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKey);
+		Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKeyRecebedor);
 
 		byte[] buffer = new byte[245];
         int bytesRead;

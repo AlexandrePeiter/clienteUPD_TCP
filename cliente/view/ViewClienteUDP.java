@@ -278,7 +278,7 @@ public class ViewClienteUDP extends JFrame {
 			try {
 				// byte[] arquivoEncriptado = RSAUtils.encrypt(arquivo)
 				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada,
-						arquivo);
+						arquivo, publicKeyRecebedor);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
