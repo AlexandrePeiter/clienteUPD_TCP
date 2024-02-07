@@ -129,10 +129,10 @@ public class ServerUDP {
 		aSocket.send(responsePacket);
 
 		FileInputStream fileInputStream = new FileInputStream(file);
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		int bytesRead;
-		byte[] buff_Recebeu = new byte[1024];
-		int bytes_Recebeu = 1024;
+		byte[] buff_Recebeu = new byte[256];
+		int bytes_Recebeu = 256;
 		
 		int n = 0;
 		while ((bytesRead = fileInputStream.read(buffer)) != -1) {
