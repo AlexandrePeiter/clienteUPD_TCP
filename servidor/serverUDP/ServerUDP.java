@@ -110,7 +110,7 @@ public class ServerUDP {
 			aSocket.send(enviar);
 		}
 		fileOutput.close();
-		file.delete();
+		//file.delete();
 	}
 
 	private void TransmitirArquivo(File file, String mensagem, String reciver) throws IOException {
