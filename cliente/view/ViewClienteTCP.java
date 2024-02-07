@@ -238,7 +238,6 @@ public class ViewClienteTCP extends JFrame {
 	}
 
 	public void receberMensagem(String mensagem, Boolean encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-		System.out.println("Msg: " + mensagem);
 		if (mensagem.startsWith("NC: ")) {
 			String[] split = mensagem.substring(4).split(";");
 			String nomeCliente = split[0];
@@ -252,7 +251,6 @@ public class ViewClienteTCP extends JFrame {
 		}
 		else {
 			if(encrypted) mensagem = RSAUtils.decrypt(mensagem.substring(4), cliente.getPrivateKey());
-			System.out.println("msg 2: " + mensagem);
 			addTextWithAlignment(styledDoc, mensagem + "\n", Alignment.LEFT, Color.BLACK);
 		}
 	}
@@ -398,7 +396,7 @@ public class ViewClienteTCP extends JFrame {
 			cliente.send("msg;" + destino + ";" + msgEncriptada);
 		} else {
 			try {
-				cliente.sendArquivo("arq;" + destino + ";" + msgEncriptada, arquivo);
+				cliente.sendArquivo("arq;" + destino + ";" + msgEncriptada, arquivo, publicKeyRecebedor);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}

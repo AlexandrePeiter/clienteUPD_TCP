@@ -15,6 +15,7 @@ import cliente.view.ViewClienteTCP;
 import rsa.RSAUtils;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
@@ -48,7 +49,7 @@ public class Recebedor implements Runnable	{
 				}
 			}
 			catch(Exception e){
-				throw new RuntimeException(e);
+				e.printStackTrace();
 			}
         }
 		s.close();
@@ -71,22 +72,25 @@ public class Recebedor implements Runnable	{
 				System.out.println("Falha ao criar o diretório.");
 		}
 
-		FileOutputStream fileOutputStream = new FileOutputStream(path+"//"+nome+"_TCP"+dados[1]);
+		Cipher cipher = RSAUtils.getCipherDecryptInstance(this.privateKey);
 		try {
-			byte[] buffer = new byte[1024];
+			FileOutputStream fileOutputStream = new FileOutputStream(path+"//"+nome+"_TCP"+dados[1]);
+			byte[] buffer = new byte[256];
 			int bytesRead;
 			System.out.println("Entrando no while recebedor");
 			while ((bytesRead = servidor.read(buffer)) != -1) {
-				fileOutputStream.write(buffer, 0, bytesRead);
+				System.out.println(bytesRead);
+				var desencryptedBytes = cipher.doFinal(buffer, 0, buffer.length);
+				fileOutputStream.write(desencryptedBytes, 0, desencryptedBytes.length);
+				// fileOutputStream.write(buffer, 0, bytesRead);
 				//System.out.println(bytesRead);
-				if (bytesRead != 1024)
+				if (bytesRead != 256)
 					break;
 			}
-
-			System.out.println("Saindo do while av : " + bytesRead);
 			fileOutputStream.close();
+			System.out.println("Saindo do while av : " + bytesRead);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			e.printStackTrace();
 		}
 		view.receberMensagem(dados[0] + ": Enviou o arquivo " + dados[1], false);
 		System.out.println("Arquivo recebido com sucesso!");

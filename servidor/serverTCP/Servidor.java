@@ -120,27 +120,6 @@ public class Servidor	{
 		cliente.println("MS: " + message);
 		
 	}
-	public void enviarArquivo(String sender, String receiver, String message, File dadosArquivo) {
-		//Envia um arquivo para um cliente especifico
-		PrintStream cliente = clientes.get(receiver);
-		FileInputStream fileInputStream;
-		cliente.println("FL: " + message);
-		try {
-			fileInputStream = new FileInputStream(dadosArquivo);
-			// Envie o arquivo byte a byte
-			byte[] buffer = new byte[1024];
-			int bytesRead;
-			System.out.println("Começando a enviar Arquivo");
-			while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-				cliente.write(buffer, 0, bytesRead);
-			}
-			fileInputStream.close();
-			System.out.println("terminado a enviar");
-			dadosArquivo.delete();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 	
 	public void enviarArquivo(String nomeSender, String receiver, String message, InputStream dadosArquivo) {
 		//Envia um arquvio para um cliente especifico
@@ -150,49 +129,23 @@ public class Servidor	{
 		while( i < 1000000 ) {
 			i++;
 		}
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		int bytesRead;
 		try {
+			System.out.println("entrando while servidor");
 			while ((bytesRead = dadosArquivo.read(buffer)) != -1) {
 				cliente.write(buffer, 0, bytesRead);
-				if(bytesRead  !=  1024)
-	            	break;
+				if (bytesRead != 256) {
+					dadosArquivo.close();
+					break;
+				}
 			}
+			dadosArquivo.close();
+			System.out.println("saiu do while");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-	}
-	public void distribuirArquivo(String sender, String message, InputStream dadosArquivo) {
-		//Envia uma mensagem para todos os clientes
-		byte[] buffer = new byte[1024];
-		int bytesRead;
-		for(Entry<String, PrintStream> entrada : clientes.entrySet()) {
-			PrintStream cliente = entrada.getValue();
-			if(!entrada.getKey().equals(sender)) {
-				cliente = entrada.getValue();
-				cliente.println("FL: " + message);
-			}
-		}
-		int i = 0;
-		while( i < 1000000 ) {
-			i++;
-		}
-		try {
-			while ((bytesRead = dadosArquivo.read(buffer)) != -1) {
-				for(Entry<String, PrintStream> entrada : clientes.entrySet())	{
-					PrintStream cliente = entrada.getValue();
-					if(!entrada.getKey().equals(sender)) {
-						cliente = entrada.getValue();
-						cliente.write(buffer, 0, bytesRead);
-					} 					
-				}	
-				if(bytesRead  !=  1024)
-	            	break;
-			}
-		} catch (IOException e) { 
-			e.printStackTrace();
-		}
+
 	}
 
 	public void enviarChaveRSA(String receiver){

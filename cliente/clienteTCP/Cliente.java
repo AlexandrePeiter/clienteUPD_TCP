@@ -3,13 +3,15 @@ package cliente.clienteTCP;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 
 import cliente.view.ViewClienteTCP;
 import rsa.RSAUtils;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 public class Cliente	{
 	
@@ -53,28 +55,32 @@ public class Cliente	{
 		//Envia uma mensagem para o servidor
 		saida.println(str);
 	}
-	public void sendArquivo(String str, File arquivo) {
+	public void sendArquivo(String str, File arquivo, PublicKey publicKeyRecebedor) throws Exception {
 		//Envia um arquvio para o servidor
 		saida.println(str);
 		int i = 0;
-		while( i < 100000 ) {
+		while( i < 1000000 ) {
 			i++;
 		}
-		FileInputStream fileInputStream;
-		try {
-			fileInputStream = new FileInputStream(arquivo);
+
+		try(FileInputStream fileInputStream = new FileInputStream(arquivo)) {
 			// Envie o arquivo byte a byte
-			byte[] buffer = new byte[1024];
+			Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKeyRecebedor);;
+			byte[] buffer = new byte[245];
 			int bytesRead;
 			System.out.println("Começando a enviar");
 			while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-				saida.write(buffer, 0, bytesRead);
+				byte[] encryptedBuffer = cipher.doFinal(buffer, 0, buffer.length);
+				System.out.println(bytesRead);
+				saida.write(encryptedBuffer, 0, encryptedBuffer.length);
+				//saida.write(encryptedBuffer, 0, 256);
 			}
+			fileInputStream.close();
 			System.out.println("Terminando de enviar");
 		} catch (IOException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-	}
+    }
 	
 	public void fechar() throws IOException {
 		//Fecha a conex�o com o servidor

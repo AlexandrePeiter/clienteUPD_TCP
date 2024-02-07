@@ -18,7 +18,6 @@ public class TrataCliente implements Runnable	{
 		Scanner	s	=	new	Scanner(this.cliente);
 		while	(s.hasNextLine())	{
 			String mensagem = s.nextLine();
-			System.out.println(mensagem);
 			String [] dados = mensagem.split(";", 3);
 
 			if(dados[0].equals("msg"))
@@ -29,15 +28,10 @@ public class TrataCliente implements Runnable	{
 				servidor.removerCliente(dados[1]);
 		}
 		s.close();
-		
+
 	}
 	private void tratarArquivo(String[] dados) {
-		if(dados[1].equals("broadcast")) {
-			servidor.distribuirArquivo(nomeSender, dados[2], cliente);
-		} else {
-			servidor.enviarArquivo(nomeSender, dados[1], dados[2], cliente);
-		}
-	
+		servidor.enviarArquivo(nomeSender, dados[1], dados[2], cliente);
 	}
 	private void tratarMensagens(String[] dados) {
 		if(dados[1].equals("broadcast")) {
