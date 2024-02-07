@@ -43,12 +43,11 @@ public class Cliente	{
 		String publicKeyStr = RSAUtils.encodeKeyToBase64(publicKey);
 		System.out.println(publicKeyStr);
 
-		r = new Recebedor(cliente.getInputStream(), view, nome);
+		r = new Recebedor(cliente.getInputStream(), view, nome, this.privateKey);
 		new Thread(r).start();
 		saida = new	PrintStream(cliente.getOutputStream());
 		saida.println(nome);
 		saida.println(publicKeyStr);
-		
 	}
 	public void send(String str) {
 		//Envia uma mensagem para o servidor
@@ -85,5 +84,9 @@ public class Cliente	{
 	public void sair() {
 		//Avisa ao servidor que vai sair
 		saida.println("OUT;" + nome);	
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
 	}
 }

@@ -25,7 +25,7 @@ public class Servidor	{
 	public Servidor (int porta) {
 		this.porta = porta;
 		this.clientes = new	HashMap<>();
-		this.chavesClientes = new HashMap();
+		this.chavesClientes = new HashMap<>();
 		this.nomeCliente = new ArrayList<>();
 	}
 
@@ -67,9 +67,12 @@ public class Servidor	{
 			String nome = "", publicKeyCliente = "";
 			if(s.hasNextLine()) {
 				nome = s.nextLine();
-				publicKeyCliente = s.nextLine();
+				if(s.hasNextLine())
+					publicKeyCliente = s.nextLine();
 			}
 
+
+			System.out.println(nome + " " + publicKeyCliente);
 			this.clientes.put(nome, ps);
 			this.chavesClientes.put(nome, publicKeyCliente);
 			this.nomeCliente.add(nome);
@@ -77,7 +80,7 @@ public class Servidor	{
 
 			//Inicia uma nova thread
 			new	Thread(tc).start();
-			this.distribuiMensagem(nome, "NC: " + nome);
+			this.distribuiMensagem(nome, "NC: " + nome + ";" + publicKeyCliente);
 		}
 	}
 	
@@ -87,12 +90,15 @@ public class Servidor	{
 			//System.out.println("Enviando para :" + entrada.getKey());
 			PrintStream cliente = entrada.getValue();
 			if(!entrada.getKey().equals(sender)) {
-				cliente = entrada.getValue();
+				//cliente = entrada.getValue();
 				cliente.println(msg);
-			} else { 
+			} else {
+				String publicKeyClienteNovo;
 				for (String string : nomeCliente) {
-					if(!string.equals(sender))
-						cliente.println("NC: " + string);
+					if(!string.equals(sender)) {
+						publicKeyClienteNovo = chavesClientes.get(string);
+						cliente.println("NC: " + string + ";" + publicKeyClienteNovo);
+					}
 				}
 			}
 		}

@@ -47,6 +47,8 @@ import rsa.RSAUtils;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class ViewClienteTCP extends JFrame {
 
@@ -89,9 +91,8 @@ public class ViewClienteTCP extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				
-				if(cliente != null)
-					cliente.sair();
+			if(cliente != null)
+				cliente.sair();
 			}
 		});
 		setTitle("TCP Cliente");
@@ -151,32 +152,7 @@ public class ViewClienteTCP extends JFrame {
 		styledDoc = textPane.getStyledDocument();
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String mensagem = textField_1.getText();
-				String destino = list.getSelectedItem();
-				System.out.println(destino + ";" + nome + ": " + mensagem);
-				textField_1.setText("");
-
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-				String horaSistema = LocalDateTime.now().format(formatter);
-
-				if (arquivo == null) {
-					cliente.send("msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem);
-					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
-							Alignment.RIGHT, Color.BLUE);
-				}
-				else {
-					String mensagemEnvia = "arq;" + destino + ";" + "(" + horaSistema + ") " + nome + ":  ;TCP"
-							+ arquivo.getName();
-					cliente.sendArquivo(mensagemEnvia, arquivo);
-					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + arquivo.getName() + "\n",
-							Alignment.RIGHT, Color.BLUE);
-					arquivo = null;
-					
-				}
-				
-				textField_1.setEditable(true);
-				
+				handleEnvioMensagem();
 			}
 		});
 
@@ -186,21 +162,7 @@ public class ViewClienteTCP extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					String mensagem = textField_1.getText();
-					String destino = list.getSelectedItem();
-					System.out.println(destino + ";" + nome + ": " + mensagem);
-
-					textField_1.setText("");
-
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-					String horaSistema = LocalDateTime.now().format(formatter);
-
-					if (arquivo == null)
-						cliente.send("msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem);
-					addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
-							Alignment.RIGHT, Color.BLUE);
-					textField_1.setEditable(true);
+					handleEnvioMensagem();
 				}
 			}
 		});
@@ -230,7 +192,7 @@ public class ViewClienteTCP extends JFrame {
 			}
 		});
 		btnNewButton_2
-				.setIcon(new ImageIcon(ViewClienteTCP.class.getResource("/cliente/resources/anexar-arquivo.png")));
+				.setIcon(new ImageIcon(Objects.requireNonNull(ViewClienteTCP.class.getResource("/cliente/resources/anexar-arquivo.png"))));
 		GridBagConstraints gbc_btnNewButton_2 = new GridBagConstraints();
 		gbc_btnNewButton_2.insets = new Insets(0, 0, 0, 5);
 		gbc_btnNewButton_2.gridx = 1;
@@ -275,8 +237,8 @@ public class ViewClienteTCP extends JFrame {
 		LEFT, CENTER, RIGHT
 	}
 
-	public void receberMensagem(String mensagem) throws NoSuchAlgorithmException, InvalidKeySpecException {
-
+	public void receberMensagem(String mensagem, Boolean encrypted) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+		System.out.println("Msg: " + mensagem);
 		if (mensagem.startsWith("NC: ")) {
 			String[] split = mensagem.substring(4).split(";");
 			String nomeCliente = split[0];
@@ -288,9 +250,9 @@ public class ViewClienteTCP extends JFrame {
 				list.select(0);
 			}
 		}
-
 		else {
-			mensagem = mensagem.substring(4);
+			if(encrypted) mensagem = RSAUtils.decrypt(mensagem.substring(4), cliente.getPrivateKey());
+			System.out.println("msg 2: " + mensagem);
 			addTextWithAlignment(styledDoc, mensagem + "\n", Alignment.LEFT, Color.BLACK);
 		}
 	}
@@ -386,15 +348,41 @@ public class ViewClienteTCP extends JFrame {
         frame.setVisible(true);
 	}
 
+	private void handleEnvioMensagem(){
+		String destino = list.getSelectedItem();
+		String mensagem = textField_1.getText();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+		String horaSistema = LocalDateTime.now().format(formatter);
+
+		textField_1.setText("");
+
+		if(destino.equals("broadcast")){
+			for (Map.Entry<String, PublicKey> chat : chavesClientes.entrySet()){
+				enviarMensagem(chat.getKey(), mensagem, horaSistema);
+			}
+		}
+		else {
+			enviarMensagem(destino, mensagem, horaSistema);
+		}
+
+		if(arquivo == null)
+			addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
+					ViewClienteTCP.Alignment.RIGHT, Color.BLUE);
+		else
+			addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
+					ViewClienteTCP.Alignment.RIGHT, Color.BLUE);
+
+		arquivo = null;
+		textField_1.setEditable(true);
+	}
 	private void enviarMensagem(String destino, String mensagem, String horaSistema){
 		String msgEncriptada;
 
 		System.out.println(destino + ";" + nome + ": " + mensagem);
 		textField_1.setText("");
 		String msgCompleta = arquivo == null ?
-				"msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem
-				: "arq;" + destino + ";" + "(" + horaSistema + ") " + nome + ":  ;TCP"
-				+ arquivo.getName();;
+				"(" + horaSistema + ") " + nome + ": " + mensagem
+				: "(" + horaSistema + ") " + nome + ";" + arquivo.getName();
 
 		PublicKey publicKeyRecebedor = chavesClientes.get(destino);
 
@@ -407,22 +395,17 @@ public class ViewClienteTCP extends JFrame {
 		}
 
 		if (arquivo == null) {
-			cliente.send("msg;" + destino + ";" + "(" + horaSistema + ") " + nome + ": " + mensagem);
+			cliente.send("msg;" + destino + ";" + msgEncriptada);
 		} else {
 			try {
-				String mensagemEnvia = "arq;" + destino + ";" + "(" + horaSistema + ") " + nome + ":  ;TCP"
-						+ arquivo.getName();
-				cliente.sendArquivo(mensagemEnvia,
-						arquivo);
+				cliente.sendArquivo("arq;" + destino + ";" + msgEncriptada, arquivo);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
-			arquivo = null;
 		}
 	}
 	public void removerCliente(String mensagem) {
 		mensagem = mensagem.substring(4);
 		list.remove(mensagem);
-		
 	}
 }

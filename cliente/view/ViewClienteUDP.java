@@ -166,12 +166,8 @@ public class ViewClienteUDP extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					String mensagem = textField_1.getText();
 					String destino = list.getSelectedItem();
-					System.out.println(destino + ";" + nome + ": " + mensagem);
-
-					textField_1.setText("");
-
+					String mensagem = textField_1.getText();
 					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 					String horaSistema = LocalDateTime.now().format(formatter);
 
@@ -188,7 +184,8 @@ public class ViewClienteUDP extends JFrame {
 						addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + mensagem + "\n",
 								Alignment.RIGHT, Color.BLUE);
 					else
-						arquivo = null;
+						addTextWithAlignment(styledDoc, "(" + horaSistema + ") " + destino + " > " + "Arquivo: " + arquivo.getName() + "\n",
+								Alignment.RIGHT, Color.BLUE);
 
 					textField_1.setEditable(true);
 				}
@@ -277,8 +274,7 @@ public class ViewClienteUDP extends JFrame {
 		} else {
 			try {
 				// byte[] arquivoEncriptado = RSAUtils.encrypt(arquivo)
-				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada,
-						arquivo);
+				clienteUDP.sendArquivo("FL: " + destino + ";" + msgEncriptada, arquivo);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
