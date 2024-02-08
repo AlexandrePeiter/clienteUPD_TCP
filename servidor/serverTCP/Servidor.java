@@ -29,20 +29,6 @@ public class Servidor	{
 		this.nomeCliente = new ArrayList<>();
 	}
 
-	public String encriptar(String txt) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.ENCRYPT_MODE, this.chavePublica);
-		byte[] encryptedBytes = cipher.doFinal(txt.getBytes());
-		return Base64.getEncoder().encodeToString(encryptedBytes);
-	}
-
-	public String decriptar(String txtEncriptado) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, this.chavePrivada);
-		byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(txtEncriptado));
-		return new String(decryptedBytes);
-	}
-
 	public String getStringChavePublica() {
 		return Base64.getEncoder().encodeToString(chavePublica.getEncoded());
 	}
