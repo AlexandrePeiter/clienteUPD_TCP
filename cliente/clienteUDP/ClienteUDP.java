@@ -10,10 +10,11 @@ import java.io.*;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Random;
+import java.util.Base64;
+
 
 public class ClienteUDP {
-	
+
 	private	String	host;
 	private int	porta;
 	private ViewClienteUDP view;
@@ -37,16 +38,18 @@ public class ClienteUDP {
 		String publicKeyStr = RSAUtils.encodeKeyToBase64(publicKey);
 		System.out.println(publicKeyStr);
 
+		System.out.println("Chave Privada: " + Base64.getEncoder().encodeToString(privateKey.getEncoded()));
+
 		String nome = nomeCliente;
 		nomeCliente = "NC: " + nomeCliente + ";" + publicKeyStr;
 
 		aSocket = new DatagramSocket();
 		byte[] m = nomeCliente.getBytes();
 		InetAddress aHost = InetAddress.getByName(host);
-		
+
 		DatagramPacket request = new DatagramPacket(m, m.length, aHost, porta);
 		aSocket.send(request);
-		
+
 		r = new RecebedorUDP(aSocket, view, nome, privateKey);
 		new Thread(r).start();
 	}
@@ -85,41 +88,54 @@ public class ClienteUDP {
 		}
 	}
 
-	public void sendArquivo(String string, File arquivo) throws Exception {
+	public void sendArquivo(String string, File arquivo, PublicKey chaveRecebedor) throws Exception {
 		//Envia arquivo
 		byte [] mensagemIncial = string.getBytes();
-		
-        FileInputStream fileInputStream = new FileInputStream(arquivo);
-		Cipher cipher = RSAUtils.getCipherEncryptInstance(publicKey);
 
-		byte[] buffer = new byte[245];
-        int bytesRead;
+		FileInputStream fileInputStream = new FileInputStream(arquivo);
 
-        InetAddress aHost;
-        aHost = InetAddress.getByName(host);
-        
-        DatagramPacket pacoteInicial = new DatagramPacket(mensagemIncial, mensagemIncial.length, aHost, porta);
-        aSocket.send(pacoteInicial);
+		Cipher cipher = RSAUtils.getCipherEncryptInstance(chaveRecebedor);
 
-		while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-			int n_pacote_recebido;
+		//Cipher cipherde = RSAUtils.getCipherDecryptInstance(privateKey);
 
+
+		byte[] buffer = new byte[234];
+		int bytesRead;
+
+		InetAddress aHost;
+		aHost = InetAddress.getByName(host);
+
+		DatagramPacket pacoteInicial = new DatagramPacket(mensagemIncial, mensagemIncial.length, aHost, porta);
+		aSocket.send(pacoteInicial);
+
+
+
+		bytesRead = fileInputStream.read(buffer);
+
+		while (bytesRead != -1) {
+			int n_pacote_recebido;			
 			byte[] encryptedBuffer = cipher.doFinal(buffer);
-			System.out.println(bytesRead + " " + encryptedBuffer.length);
-			DatagramPacket pacote = new DatagramPacket(encryptedBuffer, 256, aHost, porta);
-
+			DatagramPacket pacote = new DatagramPacket(encryptedBuffer, encryptedBuffer.length, aHost, porta);
 			aSocket.send(pacote);
-
+	        long tempoInicial = System.currentTimeMillis();
+	        long segundosPassados;
 			do {
 				n_pacote_recebido = r.getAck();
-				System.out.println(n_pacote_recebido);
-			} while (n_pacote_recebido == -1);
+				long tempoAtual = System.currentTimeMillis();
+				segundosPassados = (tempoAtual - tempoInicial) / 1000;
+
+			} while (n_pacote_recebido == -1 && segundosPassados < 2);
+			if(n_pacote_recebido != -1)
+				bytesRead = fileInputStream.read(buffer);
 		}
-        byte[] fim = new byte[0];
-        DatagramPacket pacoteFim = new DatagramPacket(fim, fim.length, aHost, porta);
-        aSocket.send(pacoteFim);
-        System.out.println("Enviando fim de arquivo");
-        fileInputStream.close();		
+
+
+		byte[] fim = new byte[0];
+		DatagramPacket pacoteFim = new DatagramPacket(fim, fim.length, aHost, porta);
+		aSocket.send(pacoteFim);
+		System.out.println("Enviando fim de arquivo");
+
+		fileInputStream.close();		
 	}
 
 	public PrivateKey getPrivateKey() {

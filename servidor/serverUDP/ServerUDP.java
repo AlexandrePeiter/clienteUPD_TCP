@@ -72,9 +72,9 @@ public class ServerUDP {
 		// Verifica o nome do arquivo
 		mensagem = mensagem.substring(4);
 		String[] dados = mensagem.split(";", 3);
-		byte[] buffer = new byte[256];
+		byte[] buffer = new byte[1024];
 		// Criar um novo arquivo
-		File file = new File("Servidor_" + UUID.randomUUID());
+		File file = new File("Servidor111_" + UUID.randomUUID()+".txt");
 		FileOutputStream fileOutput = new FileOutputStream(file);
 
 		// Recebe os dados referentes ao arquivo até a chegada do pacote "final" com
@@ -89,13 +89,14 @@ public class ServerUDP {
 				System.out.println("Servidor recebeu fim de arquivo");
 				// Chamada para enviar os arquivos
 				String sender = dados[1].substring(19);
-				if(!dados[0].equals("broadcast")) {
-					TransmitirArquivo(file, mensagem, dados[0]);
-				} else {
-					for (String nomeReciever : nomeCliente) 
-						if (!nomeReciever.equals(sender)) 
-							TransmitirArquivo(file, mensagem, nomeReciever);	
-				}
+//				if(!dados[0].equals("broadcast")) {
+//					TransmitirArquivo(file, mensagem, dados[0]);
+//				} else {
+//					for (String nomeReciever : nomeCliente)
+//						if (!nomeReciever.equals(sender))
+//							TransmitirArquivo(file, mensagem, nomeReciever);
+//				}
+				TransmitirArquivo(file, mensagem, dados[0]);
 				break;
 			}
 			// Escreve no arquivo o conteudo do pacote
@@ -110,7 +111,7 @@ public class ServerUDP {
 			aSocket.send(enviar);
 		}
 		fileOutput.close();
-		file.delete();
+		//file.delete();
 	}
 
 	private void TransmitirArquivo(File file, String mensagem, String reciver) throws IOException {
@@ -129,13 +130,14 @@ public class ServerUDP {
 		aSocket.send(responsePacket);
 
 		FileInputStream fileInputStream = new FileInputStream(file);
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[256];
 		int bytesRead;
-		byte[] buff_Recebeu = new byte[1024];
-		int bytes_Recebeu = 1024;
+		byte[] buff_Recebeu = new byte[256];
+		int bytes_Recebeu = 256;
 		
 		int n = 0;
 		while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+			System.out.println("bytesRead: " + bytesRead);
 			String mensagemRecebida;
 			DatagramPacket pacoteEnviar = new DatagramPacket(buffer, bytesRead, ipCliete, portaCliente);
 			DatagramPacket pacoteReceber = new DatagramPacket(buff_Recebeu, bytes_Recebeu);
