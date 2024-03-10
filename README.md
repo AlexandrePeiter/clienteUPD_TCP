@@ -40,9 +40,10 @@ Este sistema permite que aos usuários:
 
 * Framework para backend: Nest.js
 * Framework para frontend: Angular
-* Banco de dados: PostgreSQL
+* Banco de dados: MySQL
+* Comunicação com banco de dados: ORM
 * Ferramentas: Git, GitHub, GitFlow, Docker e Docker Compose
 
-* 
+## Conclusão
 
-
+O sistema de gerenciamento de projetos é uma ferramenta útil para a empresa, pois permite que os usuários gerenciar os profissionais da empresa e acompanhar quais times e pessoas são responsáveis por determinado projeto, ajudando a idenficar o que cada time está realizando no momento. O sistema foi desenvolvido utilizando uma metodologia ágil e e ferramentas que auxiliam no gerenciamento de projetos, como Git, GitFlow. Além disso, ferramentas como Nest.js, Angular e ORM, que abstraem funcionalidade para front e backende, auxiliaram no desenvolvimento agil dessa aplicação
